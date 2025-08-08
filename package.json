@@ -1,0 +1,45 @@
+{
+  "name": "mtg-deck-manager-backend",
+  "version": "1.0.0",
+  "description": "Magic: The Gathering Deck Manager - Backend API",
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "nodemon",
+    "dev:direct": "ts-node --transpile-only -r tsconfig-paths/register ./src/main.ts",
+    "dev:simple": "ts-node ./src/main.ts",
+    "build": "node scripts/build.js",
+    "build:simple": "tsc",
+    "start": "node dist/main.js",
+    "start:prod": "NODE_ENV=production node dist/main.js",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "test": "jest",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": ["magic", "mtg", "deck", "manager", "api"],
+  "author": "Tu Nombre",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.5.0",
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0",
+    "dotenv": "^16.3.1",
+    "joi": "^17.9.2",
+    "tsconfig-paths": "^4.2.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/node": "^20.5.0",
+    "@types/cors": "^2.8.13",
+    "@types/joi": "^17.2.3",
+    "typescript": "^5.1.6",
+    "ts-node": "^10.9.1",
+    "tsconfig-paths": "^4.2.0",
+    "nodemon": "^3.0.1",
+    "rimraf": "^5.0.1",
+    "eslint": "^8.47.0",
+    "@typescript-eslint/eslint-plugin": "^6.4.0",
+    "@typescript-eslint/parser": "^6.4.0"
+  }
+}

@@ -1,0 +1,692 @@
+openapi: 3.0.3
+info:
+  title: MTG Deck Manager API
+  description: |
+    REST API for managing Magic: The Gathering deck collections.
+    
+    This API provides comprehensive deck management functionality including
+    creation, retrieval, updates, and deletion of deck records, along with
+    advanced search and filtering capabilities.
+    
+    ## Key Features:
+    - Full CRUD operations for decks
+    - Advanced filtering by type, tier, location, etc.
+    - Full-text search capabilities
+    - Pagination support
+    - Robust validation and error handling
+    
+  version: 1.0.0
+  contact:
+    name: MTG Deck Manager Team
+    email: api@mtg-deck-manager.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development
+  - url: https://api.mtg-deck-manager.com/api
+    description: Production
+
+tags:
+  - name: Decks
+    description: CRUD operations for deck management
+  - name: Search
+    description: Search and filtering operations
+  - name: Special
+    description: Special purpose endpoints
+
+paths:
+  /decks:
+    post:
+      tags: [Decks]
+      summary: Create new deck
+      description: Creates a new Magic: The Gathering deck with complete information
+      operationId: createDeck
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDeckRequest'
+            examples:
+              aggro_deck:
+                summary: Typical Aggro deck
+                value:
+                  name: "Fast Red Dragons"
+                  description: "Aggro deck focused on low-cost dragons"
+                  colors: ["R"]
+                  tierRating: "A"
+                  hasCardSleeves: true
+                  isComplete: true
+                  deckType: "AGGRO"
+                  gameStage: "EARLY"
+                  storageLocation: "Red Box #1"
+                  descriptiveImage: "https://example.com/dragon.jpg"
+                  planeswalker: "Chandra"
+              control_deck:
+                summary: Control deck
+                value:
+                  name: "Blue/White Control"
+                  description: "Control deck with counterspells and removal"
+                  colors: ["U", "W"]
+                  tierRating: "S"
+                  hasCardSleeves: true
+                  isComplete: false
+                  deckType: "CONTROL"
+                  gameStage: "LATE"
+                  storageLocation: "Blue Box #2"
+                  planeswalker: "Teferi"
+      responses:
+        '201':
+          description: Deck created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeckResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    get:
+      tags: [Decks]
+      summary: Get all decks
+      description: |
+        Retrieves a paginated list of decks with optional filtering.
+        Supports filtering by type, tier, completion status, location, etc.
+      operationId: getAllDecks
+      parameters:
+        - name: page
+          in: query
+          description: Page number (starting from 1)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: sortBy
+          in: query
+          description: Field to sort by
+          schema:
+            type: string
+            enum: [name, createdAt, updatedAt, tierRating]
+            default: createdAt
+        - name: sortOrder
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: deckType
+          in: query
+          description: Filter by deck type
+          schema:
+            $ref: '#/components/schemas/DeckType'
+        - name: gameStage
+          in: query
+          description: Filter by game stage
+          schema:
+            $ref: '#/components/schemas/GameStage'
+        - name: tierRating
+          in: query
+          description: Filter by tier rating
+          schema:
+            $ref: '#/components/schemas/TierRating'
+        - name: isComplete
+          in: query
+          description: Filter by completion status
+          schema:
+            type: boolean
+        - name: hasCardSleeves
+          in: query
+          description: Filter by card sleeves status
+          schema:
+            type: boolean
+        - name: storageLocation
+          in: query
+          description: Filter by storage location
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of decks retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDecksResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /decks/{id}:
+    get:
+      tags: [Decks]
+      summary: Get deck by ID
+      description: Retrieves a specific deck by its unique identifier
+      operationId: getDeckById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique deck identifier
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: "507f1f77bcf86cd799439011"
+      responses:
+        '200':
+          description: Deck found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeckResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    put:
+      tags: [Decks]
+      summary: Update deck
+      description: Updates an existing deck with new information
+      operationId: updateDeck
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the deck to update
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDeckRequest'
+            examples:
+              tier_update:
+                summary: Update tier only
+                value:
+                  tierRating: "S"
+              completion_update:
+                summary: Mark as complete
+                value:
+                  isComplete: true
+                  hasCardSleeves: true
+      responses:
+        '200':
+          description: Deck updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeckResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    delete:
+      tags: [Decks]
+      summary: Delete deck
+      description: Permanently deletes a deck from the system
+      operationId: deleteDeck
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the deck to delete
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+      responses:
+        '200':
+          description: Deck deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /decks/search/keyword:
+    get:
+      tags: [Search]
+      summary: Search decks by keyword
+      description: |
+        Searches decks using free text. The search is performed on:
+        - Deck name (weight 3)
+        - Planeswalker name (weight 2) 
+        - Description (weight 1)
+      operationId: searchDecks
+      parameters:
+        - name: keyword
+          in: query
+          required: true
+          description: Search keyword
+          schema:
+            type: string
+            minLength: 1
+            example: "dragon"
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /decks/filter/incomplete:
+    get:
+      tags: [Special]
+      summary: Get incomplete decks
+      description: Retrieves all decks marked as incomplete (projects)
+      operationId: getIncompleteDecks
+      responses:
+        '200':
+          description: List of incomplete decks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /decks/location/{location}:
+    get:
+      tags: [Special]
+      summary: Get decks by location
+      description: Retrieves all decks stored in a specific location
+      operationId: getDecksByLocation
+      parameters:
+        - name: location
+          in: path
+          required: true
+          description: Storage location
+          schema:
+            type: string
+            example: "Red Box"
+      responses:
+        '200':
+          description: Decks in the specified location
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  schemas:
+    # ===================================
+    # ENUMS
+    # ===================================
+    MagicColor:
+      type: string
+      enum: [W, U, B, R, G, C]
+      description: |
+        Magic: The Gathering colors
+        - W: White
+        - U: Blue 
+        - B: Black
+        - R: Red
+        - G: Green
+        - C: Colorless
+
+    TierRating:
+      type: string
+      enum: [S, A, B, C, D]
+      description: |
+        Deck power rating
+        - S: Supreme tier
+        - A: High tier
+        - B: Mid-high tier
+        - C: Mid tier
+        - D: Low tier
+
+    DeckType:
+      type: string
+      enum: [AGGRO, COMBO, CONTROL]
+      description: |
+        Deck strategy type
+        - AGGRO: Aggressive, aims to win quickly
+        - COMBO: Based on specific card combinations
+        - CONTROL: Defensive, controls the game
+
+    GameStage:
+      type: string
+      enum: [EARLY, MID, LATE]
+      description: |
+        Game stage where the deck is strongest
+        - EARLY: Early game (turns 1-4)
+        - MID: Mid game (turns 4-7)
+        - LATE: Late game (turn 7+)
+
+    # ===================================
+    # REQUEST SCHEMAS
+    # ===================================
+    CreateDeckRequest:
+      type: object
+      required:
+        - name
+        - description
+        - colors
+        - tierRating
+        - hasCardSleeves
+        - isComplete
+        - deckType
+        - gameStage
+        - storageLocation
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Unique deck name
+          example: "Fast Red Dragons"
+        description:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Detailed deck description
+          example: "Aggro deck focused on low-cost mana dragons"
+        colors:
+          type: array
+          items:
+            $ref: '#/components/schemas/MagicColor'
+          minItems: 1
+          maxItems: 5
+          description: Deck colors
+          example: ["R"]
+        tierRating:
+          $ref: '#/components/schemas/TierRating'
+        hasCardSleeves:
+          type: boolean
+          description: Whether the deck has protective sleeves
+          example: true
+        isComplete:
+          type: boolean
+          description: Whether the deck is complete or a project
+          example: true
+        deckType:
+          $ref: '#/components/schemas/DeckType'
+        gameStage:
+          $ref: '#/components/schemas/GameStage'
+        storageLocation:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Physical location where the deck is stored
+          example: "Red Box #1"
+        descriptiveImage:
+          type: string
+          format: uri
+          description: URL of deck's descriptive image
+          example: "https://example.com/images/dragon-deck.jpg"
+        planeswalker:
+          type: string
+          maxLength: 50
+          description: Main planeswalker of the deck
+          example: "Chandra"
+
+    UpdateDeckRequest:
+      type: object
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          minLength: 1
+          maxLength: 500
+        colors:
+          type: array
+          items:
+            $ref: '#/components/schemas/MagicColor'
+          minItems: 1
+          maxItems: 5
+        tierRating:
+          $ref: '#/components/schemas/TierRating'
+        hasCardSleeves:
+          type: boolean
+        isComplete:
+          type: boolean
+        deckType:
+          $ref: '#/components/schemas/DeckType'
+        gameStage:
+          $ref: '#/components/schemas/GameStage'
+        storageLocation:
+          type: string
+          minLength: 1
+          maxLength: 100
+        descriptiveImage:
+          type: string
+          format: uri
+        planeswalker:
+          type: string
+          maxLength: 50
+
+    # ===================================
+    # RESPONSE SCHEMAS
+    # ===================================
+    Deck:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: '^[0-9a-fA-F]{24}$'
+          description: Unique deck identifier
+          example: "507f1f77bcf86cd799439011"
+        name:
+          type: string
+          example: "Fast Red Dragons"
+        description:
+          type: string
+          example: "Aggro deck focused on low-cost mana dragons"
+        colors:
+          type: array
+          items:
+            $ref: '#/components/schemas/MagicColor'
+          example: ["R"]
+        tierRating:
+          $ref: '#/components/schemas/TierRating'
+        hasCardSleeves:
+          type: boolean
+          example: true
+        isComplete:
+          type: boolean
+          example: true
+        deckType:
+          $ref: '#/components/schemas/DeckType'
+        gameStage:
+          $ref: '#/components/schemas/GameStage'
+        storageLocation:
+          type: string
+          example: "Red Box #1"
+        descriptiveImage:
+          type: string
+          format: uri
+          example: "https://example.com/images/dragon-deck.jpg"
+        planeswalker:
+          type: string
+          example: "Chandra"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-20T14:45:00Z"
+
+    DeckResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Deck created successfully"
+        data:
+          $ref: '#/components/schemas/Deck'
+
+    PaginatedDecksResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Deck'
+        pagination:
+          type: object
+          properties:
+            page:
+              type: integer
+              example: 1
+            limit:
+              type: integer
+              example: 10
+            total:
+              type: integer
+              example: 25
+            totalPages:
+              type: integer
+              example: 3
+
+    SearchResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Deck'
+        count:
+          type: integer
+          description: Number of results found
+          example: 5
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Operation completed successfully"
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Error description"
+        error:
+          type: string
+          example: "ERROR_CODE"
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Validation failed"
+        error:
+          type: string
+          example: "VALIDATION_ERROR"
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "name"
+              message:
+                type: string
+                example: "Deck name is required"
+
+  responses:
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationErrorResponse'
+
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: "Deck with id '507f1f77bcf86cd799439011' not found"
+            error: "NOT_FOUND"
+
+    ConflictError:
+      description: Conflict (e.g. duplicate name)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: "Deck with name 'Fast Red Dragons' already exists"
+            error: "CONFLICT"
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: "Internal server error"
+            error: "INTERNAL_ERROR"
