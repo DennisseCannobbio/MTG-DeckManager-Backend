@@ -1,10 +1,7 @@
+import { CreateDeckRequest, UpdateDeckRequest } from '@application/dto';
+import { DeckUseCases } from '@application/use-cases/DeckUseCases';
+import { DeckFilters, PaginationOptions } from '@domain/types';
 import { Request, Response } from 'express';
-import { 
-    DeckUseCases, 
-    CreateDeckRequest, 
-    UpdateDeckRequest 
-} from '@application/use-cases/DeckUseCases'
-import { DeckFilters, PaginationOptions } from '@domain/repositories/DeckRepository';
 
 export class DeckController {
     constructor(private readonly deckUseCases: DeckUseCases) {}
