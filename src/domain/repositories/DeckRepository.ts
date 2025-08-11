@@ -1,28 +1,5 @@
 import { Deck, DeckType, GameStage, TierRating } from '../entities/Deck';
-
-export interface DeckFilters {
-    deckType?: DeckType;
-    gameStage?: GameStage;
-    tierRating?: TierRating;
-    isComplete?: boolean;
-    hasCardSleeves?: boolean;
-    storageLocation?: string;
-}
-
-export interface PaginationOptions {
-    page: number;
-    limit: number;
-    sortBy?: keyof Deck;
-    sortOrder?: 'asc' | 'desc';
-}
-
-export interface PaginatedResult<T> {
-    data: T[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-}
+import { DeckFilters, PaginationOptions, PaginatedResult } from '../types';
 
 export interface DeckRepository {
     // * CRUD
