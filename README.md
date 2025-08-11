@@ -194,21 +194,23 @@ curl "http://localhost:3000/api/decks/search/keyword?keyword=dragon"
 
 ```
 src/
-├── domain/                 # Domain layer (entities, interfaces)
+├── domain/                # Domain layer (entities, interfaces)
 │   ├── entities/          # Domain entities
 │   └── repositories/      # Repository interfaces
+│   └── types/             # Types
 ├── application/           # Application layer (use cases)
-│   └── use-cases/        # Business logic
+│   └── dto/               # DTOs
+│   └── use-cases/         # Business logic
 ├── infrastructure/        # Infrastructure layer (external concerns)
-│   ├── config/           # Database configuration
-│   ├── database/         # Database schemas
-│   └── repositories/     # Repository implementations
-├── presentation/         # Presentation layer (HTTP)
-│   ├── controllers/      # HTTP controllers
-│   ├── routes/          # Route definitions
-│   └── middlewares/     # Express middlewares
-├── shared/               # Shared utilities
-└── main.ts              # Application entry point
+│   ├── config/            # Database configuration
+│   ├── database/          # Database schemas
+│   └── repositories/      # Repository implementations
+├── presentation/          # Presentation layer (HTTP)
+│   ├── controllers/       # HTTP controllers
+│   ├── routes/            # Route definitions
+│   └── middlewares/       # Express middlewares
+├── shared/                # Shared utilities
+└── main.ts                # Application entry point
 ```
 
 ## 🛠️ Available Scripts

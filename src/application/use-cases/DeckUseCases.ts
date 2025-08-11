@@ -1,51 +1,7 @@
 import { Deck, DeckEntity } from '@domain/entities/Deck';
-import { DeckRepository, DeckFilters, PaginationOptions, PaginatedResult } from '@domain/repositories/DeckRepository';
-
-// * DTOs (Data Transfer Objects) => Comunication with the exterior
-export interface CreateDeckRequest {
-    name: string;
-    description: string;
-    colors: string[];
-    tierRating: string;
-    hasCardSleeves: boolean;
-    isComplete: boolean;
-    deckType: string;
-    gameStage: string;
-    storageLocation: string;
-    descriptiveImage?: string;
-    planeswalker?: string;
-}
-
-export interface UpdateDeckRequest {
-    name?: string;
-    description?: string;
-    colors?: string[];
-    tierRating?: string;
-    hasCardSleeves?: boolean;
-    isComplete?: boolean;
-    deckType?: string;
-    gameStage?: string;
-    storageLocation?: string;
-    descriptiveImage?: string;
-    planeswalker?: string;
-}
-
-export interface DeckResponse {
-    id: string;
-    name: string;
-    description: string;
-    colors: string[];
-    tierRating: string;
-    hasCardSleeves: boolean;
-    isComplete: boolean;
-    deckType: string;
-    gameStage: string;
-    storageLocation: string;
-    descriptiveImage?: string;
-    planeswalker?: string;
-    createdAt: Date;
-    updatedAt: Date;
-}
+import { DeckRepository } from '@domain/repositories/DeckRepository';
+import { CreateDeckRequest, UpdateDeckRequest, DeckResponse } from '../dto';
+import { DeckFilters, PaginationOptions, PaginatedResult } from '@domain/types';
 
 export class DeckUseCases {
     constructor(private readonly deckRepository: DeckRepository) {}

@@ -23,7 +23,6 @@ export class DatabaseConnection {
       const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/mtg-deck-manager';
       
       await mongoose.connect(mongoUri, {
-        // Configuraciones recomendadas para producción
         maxPoolSize: 10, // Maintain up to 10 socket connections
         serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
         socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
@@ -81,7 +80,6 @@ export class DatabaseConnection {
         throw new Error('Database not connected');
       }
 
-      // Realizar una consulta simple para verificar la conexión
       await mongoose.connection.db.admin().ping();
 
       return {
